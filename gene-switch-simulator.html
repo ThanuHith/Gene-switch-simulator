@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gene Switch — Epigenetics of Exercise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1B18;
+    --panel: #12241F;
+    --panel-border: #1F3931;
+    --slate: #3E5750;
+    --slate-dim: #26362F;
+    --amber: #F2A93B;
+    --amber-dim: #7A5A26;
+    --text: #ECEEE7;
+    --text-muted: #8FA69E;
+    --text-faint: #5C726B;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--bg);}
+  body{
+    margin:0;
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #143229 0%, #0B1B18 55%);
+    color: var(--text);
+    font-family: 'Manrope', system-ui, sans-serif;
+    min-height: 100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 48px 24px 64px;
+  }
+  .wrap{
+    width:100%;
+    max-width: 980px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .kicker{
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    margin: 0 0 18px;
+  }
+  .kicker span{ color: var(--amber); }
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4.4vw, 46px);
+    line-height: 1.12;
+    text-align: center;
+    max-width: 15ch;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    text-align:center;
+    max-width: 48ch;
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0 0 40px;
+  }
+
+  /* Helix */
+  .helix-frame{
+    width:100%;
+    max-width: 920px;
+    margin-bottom: 8px;
+  }
+  svg{ width:100%; height:auto; display:block; overflow: visible; }
+  .backbone{
+    fill:none;
+    stroke: var(--slate);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke 700ms ease;
+  }
+  .backbone.on{ stroke: #C98A3A; }
+  .rung{
+    stroke: var(--slate-dim);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke 500ms ease, filter 500ms ease;
+  }
+  .rung.on{
+    stroke: var(--amber);
+    filter: drop-shadow(0 0 7px rgba(242,169,59,0.85));
+  }
+  .node{
+    fill: var(--slate);
+    transition: fill 500ms ease, filter 500ms ease, r 500ms ease;
+  }
+  .node.on{
+    fill: var(--amber);
+    filter: drop-shadow(0 0 6px rgba(242,169,59,0.9));
+  }
+  .gene-tag{
+    font-family:'Manrope', sans-serif;
+    font-weight:700;
+    font-size: 13.5px;
+    fill: var(--text-faint);
+    transition: fill 500ms ease;
+  }
+  .gene-tag.on{ fill: var(--amber); }
+
+  /* Toggle */
+  .control{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin: 30px 0 46px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+  }
+  .control-label{
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-faint);
+    transition: color 400ms ease;
+    padding: 0 4px;
+    user-select:none;
+  }
+  .control-label.active-state{ color: var(--text); }
+  .switch{
+    position: relative;
+    width: 58px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--slate-dim);
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    padding: 0;
+    transition: background 500ms ease;
+    flex-shrink:0;
+  }
+  .switch.on{ background: var(--amber-dim); }
+  .switch .thumb{
+    position:absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--text);
+    transition: transform 450ms cubic-bezier(.5,1.4,.5,1), background 400ms ease;
+  }
+  .switch.on .thumb{
+    transform: translateX(26px);
+    background: var(--amber);
+    box-shadow: 0 0 10px rgba(242,169,59,0.7);
+  }
+
+  .status{
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: -30px 0 40px;
+    min-height: 20px;
+  }
+  .status strong{ color: var(--text); font-weight: 700; }
+
+  /* Gene cards */
+  .genes{
+    width:100%;
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 760px){
+    .genes{ grid-template-columns: repeat(2, 1fr); }
+  }
+  .gene-card{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    transition: border-color 500ms ease, background 500ms ease;
+  }
+  .gene-card.on{
+    border-color: var(--amber-dim);
+    background: linear-gradient(180deg, #1B2A21 0%, #12241F 100%);
+  }
+  .gene-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom: 8px;
+  }
+  .dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--slate);
+    transition: background 500ms ease, box-shadow 500ms ease;
+    flex-shrink:0;
+  }
+  .gene-card.on .dot{
+    background: var(--amber);
+    box-shadow: 0 0 6px rgba(242,169,59,0.9);
+  }
+  .gene-name{
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .gene-full{
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin: 0 0 8px;
+  }
+  .gene-desc{
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .gene-state{
+    font-size: 11.5px;
+    font-weight: 700;
+    margin-top: 10px;
+    color: var(--text-faint);
+    transition: color 500ms ease;
+  }
+  .gene-card.on .gene-state{ color: var(--amber); }
+
+  footer{
+    margin-top: 54px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    text-align:center;
+    max-width: 54ch;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Epigenetics <span>×</span> Exercise</p>
+  <h1>Exercise doesn't just burn calories. It flips switches in your DNA.</h1>
+  <p class="sub">Your genetic code doesn't change when you train — but which genes get read does. Toggle below to see five exercise-responsive genes shift from baseline to active.</p>
+
+  <div class="helix-frame">
+    <svg viewBox="0 0 940 220" xmlns="http://www.w3.org/2000/svg">
+      <path class="backbone" id="top-strand"
+        d="M0,60 C 60,20 120,100 180,60 C 240,20 300,100 360,60 C 420,20 480,100 540,60 C 600,20 660,100 720,60 C 780,20 840,100 900,60 C 920,50 930,50 940,50" />
+      <path class="backbone" id="bottom-strand"
+        d="M0,160 C 60,120 120,200 180,160 C 240,120 300,200 360,160 C 420,120 480,200 540,160 C 600,120 660,200 720,160 C 780,120 840,200 900,160 C 920,150 930,150 940,150" />
+
+      <!-- rungs + nodes + labels, positioned along the wave -->
+      <g id="gene-1">
+        <line class="rung" x1="90" y1="60" x2="90" y2="160"/>
+        <circle class="node" cx="90" cy="60" r="5"/>
+        <circle class="node" cx="90" cy="160" r="5"/>
+        <text class="gene-tag" x="90" y="196" text-anchor="middle">PGC-1α</text>
+      </g>
+      <g id="gene-2">
+        <line class="rung" x1="270" y1="60" x2="270" y2="160"/>
+        <circle class="node" cx="270" cy="60" r="5"/>
+        <circle class="node" cx="270" cy="160" r="5"/>
+        <text class="gene-tag" x="270" y="196" text-anchor="middle">VEGF</text>
+      </g>
+      <g id="gene-3">
+        <line class="rung" x1="450" y1="60" x2="450" y2="160"/>
+        <circle class="node" cx="450" cy="60" r="5"/>
+        <circle class="node" cx="450" cy="160" r="5"/>
+        <text class="gene-tag" x="450" y="196" text-anchor="middle">BDNF</text>
+      </g>
+      <g id="gene-4">
+        <line class="rung" x1="630" y1="60" x2="630" y2="160"/>
+        <circle class="node" cx="630" cy="60" r="5"/>
+        <circle class="node" cx="630" cy="160" r="5"/>
+        <text class="gene-tag" x="630" y="196" text-anchor="middle">IL-6</text>
+      </g>
+      <g id="gene-5">
+        <line class="rung" x1="810" y1="60" x2="810" y2="160"/>
+        <circle class="node" cx="810" cy="60" r="5"/>
+        <circle class="node" cx="810" cy="160" r="5"/>
+        <text class="gene-tag" x="810" y="196" text-anchor="middle">SIRT1</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="control">
+    <span class="control-label" id="label-sedentary">Sedentary</span>
+    <button class="switch" id="switch" role="switch" aria-checked="false" aria-label="Toggle between sedentary and active state"><span class="thumb"></span></button>
+    <span class="control-label" id="label-active">Active</span>
+  </div>
+  <p class="status" id="status">Baseline expression — no training stimulus</p>
+
+  <div class="genes" id="gene-grid">
+    <div class="gene-card" data-gene="1">
+      <div class="gene-top"><span class="dot"></span><span class="gene-name">PGC-1α</span></div>
+      <p class="gene-full">PPARGC1A</p>
+      <p class="gene-desc">Master regulator of mitochondrial growth. Endurance training reduces methylation at its promoter, raising expression within hours.</p>
+      <p class="gene-state" data-state>Baseline</p>
+    </div>
+    <div class="gene-card" data-gene="2">
+      <div class="gene-top"><span class="dot"></span><span class="gene-name">VEGF</span></div>
+      <p class="gene-full">Vascular Endothelial Growth Factor</p>
+      <p class="gene-desc">Signals new capillaries to form around working muscle, improving oxygen delivery over weeks of training.</p>
+      <p class="gene-state" data-state>Baseline</p>
+    </div>
+    <div class="gene-card" data-gene="3">
+      <div class="gene-top"><span class="dot"></span><span class="gene-name">BDNF</span></div>
+      <p class="gene-full">Brain-Derived Neurotrophic Factor</p>
+      <p class="gene-desc">Supports neuron growth and memory. Aerobic exercise is linked to lower promoter methylation and higher expression.</p>
+      <p class="gene-state" data-state>Baseline</p>
+    </div>
+    <div class="gene-card" data-gene="4">
+      <div class="gene-top"><span class="dot"></span><span class="gene-name">IL-6</span></div>
+      <p class="gene-full">Interleukin-6</p>
+      <p class="gene-desc">Released by contracting muscle as a signaling molecule, triggering downstream metabolic and anti-inflammatory genes.</p>
+      <p class="gene-state" data-state>Baseline</p>
+    </div>
+    <div class="gene-card" data-gene="5">
+      <div class="gene-top"><span class="dot"></span><span class="gene-name">SIRT1</span></div>
+      <p class="gene-full">Sirtuin 1</p>
+      <p class="gene-desc">A cellular energy sensor activated by exercise-induced energy stress, helping switch on fat-burning genes.</p>
+      <p class="gene-state" data-state>Baseline</p>
+    </div>
+  </div>
+
+  <footer>Built to illustrate published exercise-epigenetics research at a conceptual level — not a personal genetic test or medical tool. Free &amp; open source.</footer>
+</div>
+
+<script>
+  const switchEl = document.getElementById('switch');
+  const statusEl = document.getElementById('status');
+  const labelSed = document.getElementById('label-sedentary');
+  const labelAct = document.getElementById('label-active');
+  const cards = Array.from(document.querySelectorAll('.gene-card'));
+  const geneGroups = [1,2,3,4,5].map(n => document.getElementById('gene-'+n));
+  const backbones = [document.getElementById('top-strand'), document.getElementById('bottom-strand')];
+
+  let active = false;
+
+  function setStagger(on){
+    cards.forEach((card, i) => {
+      const delay = on ? i * 90 : (cards.length - i) * 60;
+      card.style.transitionDelay = delay + 'ms';
+      const dot = card.querySelector('.dot');
+      const state = card.querySelector('[data-state]');
+      dot.style.transitionDelay = delay + 'ms';
+      state.style.transitionDelay = delay + 'ms';
+
+      const g = geneGroups[i];
+      g.querySelectorAll('.rung, .node, .gene-tag').forEach(el => {
+        el.style.transitionDelay = delay + 'ms';
+      });
+
+      setTimeout(() => {
+        card.classList.toggle('on', on);
+        state.textContent = on ? 'Upregulated' : 'Baseline';
+        g.querySelectorAll('.rung, .node, .gene-tag').forEach(el => el.classList.toggle('on', on));
+      }, on ? delay : 0);
+    });
+    backbones.forEach(b => b.classList.toggle('on', on));
+  }
+
+  function update(){
+    switchEl.classList.toggle('on', active);
+    switchEl.setAttribute('aria-checked', String(active));
+    labelSed.classList.toggle('active-state', !active);
+    labelAct.classList.toggle('active-state', active);
+    statusEl.innerHTML = active
+      ? '<strong>5 of 5</strong> genes shifted toward active expression'
+      : 'Baseline expression — no training stimulus';
+    setStagger(active);
+  }
+
+  switchEl.addEventListener('click', () => {
+    active = !active;
+    update();
+  });
+
+  update();
+</script>
+</body>
+</html>
